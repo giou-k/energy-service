@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: energy-api
+  namespace: ns-energy-europe
+
+spec:
+  type: ClusterIP
+
+  ports:
+    - name: energy-api
+      port: 3000
+      targetPort: energy-api

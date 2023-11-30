@@ -50,7 +50,7 @@ dev-load:
 	kind load docker-image $(SERVICE_IMAGE) --name $(KIND_CLUSTER)
 
 dev-apply:
-	cat infra/k8s/base.yaml | kubectl apply -f -
+	kustomize build infra/k8s/ | kubectl apply -f -
 	#kubectl apply -f ./infra/k8s/base.yaml
 
 dev-logs:

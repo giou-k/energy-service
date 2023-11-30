@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: energy-pod
+  namespace: ns-energy-europe
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  template:
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+
+      # Compute Resource Quotas
+      #
+      # The request value helps K8s determine what node a POD can be run on by making
+      # sure the number of requesting cores for the sum of all PODs are never greater
+      # than the number of cores on a given node.
+      #
+      # The limit value helps the container runtime to determine which containers
+      # (configured in a POD running on the node) can use a CPU and for how long. This
+      # is measured in time where 100ms represents a unit of execution time.
+      #
+
+      # For CPU resource units, the quantity expression 0.1 is equivalent to the
+      # expression 100m, which can be read as "one hundred millicpu".
+
+      # Note1: if you scale horizontally, you might not define at all these resources
+      containers:
+        - name: energy-api
+          resources:
+            requests:
+              # I need access to 1/4 of the cores of the node. To see your # of threads use `docker info --format '{{.NCPU}}'`.
+              cpu: "250m"
+            limits:
+              cpu: "250m" # Execute instructions 25ms/100ms on my 1 core.
