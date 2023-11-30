@@ -1,0 +1,11 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # Energy-Api
+      - containerPort: 6000
+        hostPort: 6000
+      # Postgres
+      - containerPort: 5432
+        hostPort: 5444

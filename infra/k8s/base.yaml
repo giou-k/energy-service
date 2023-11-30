@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ns-energy-europe
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: energy-pod
+  namespace: ns-energy-europe
+
+spec:
+  selector:
+    matchLabels:
+      app: energy # Selector for pod name search. Use -l flag with kubectl.
+
+  template:
+    metadata:
+      labels:
+        app: energy
+
+    spec:
+      terminationGracePeriodSeconds: 60
+
+      containers:
+        - name: energy-api
+          image: giou/energy-service/energy-api:0.1
+          imagePullPolicy: Never #if this is not defined, then k8 tries to find the image in the docker registry and it fails
+
+          ports:
+            - name: energy-api
+              containerPort: 6000
+#            - name: sales-api-debug
+#              containerPort: 4000
+
+#          env:
+#            - name: GOMAXPROCS
+#              valueFrom:
+#                resourceFieldRef:
+#                  resource: limits.cpu
+
+#            - name: SALES_DB_USER # here as an example for configuring a hosted db.
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: app-config
+#                  key: db_user
+#                  optional: true
+#            - name: SALES_DB_PASSWORD
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: app-config
+#                  key: db_password
+#                  optional: true
+#            - name: SALES_DB_HOST
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: app-config
+#                  key: db_host
+#                  optional: true
+#            - name: SALES_DB_DISABLE_TLS
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: app-config
+#                  key: db_disabletls
+#                  optional: true
+#
+#            - name: KUBERNETES_NAMESPACE
+#              valueFrom:
+#                fieldRef:
+#                  fieldPath: metadata.namespace
+#            - name: KUBERNETES_NAME
+#              valueFrom:
+#                fieldRef:
+#                  fieldPath: metadata.name
+#            - name: KUBERNETES_POD_IP
+#              valueFrom:
+#                fieldRef:
+#                  fieldPath: status.podIP
+#            - name: KUBERNETES_NODE_NAME
+#              valueFrom:
+#                fieldRef:
+#                  fieldPath: spec.nodeName
+
+#---
+#
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: energy-api
+#  namespace: ns-energy-europe
+#
+#spec:
+#  selector:
+#    app: energy
