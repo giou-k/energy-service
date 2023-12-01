@@ -2,7 +2,12 @@
 
 Energy Service is a personal project to help me document my knowledge and sharpen my skills.
 
+- [Getting started](#GettingStarted)
 - [Bring k8 infra up](#Infra)
+
+## Getting Started
+
+Run `make all` to create the docker image.
 
 ## Infra
 
