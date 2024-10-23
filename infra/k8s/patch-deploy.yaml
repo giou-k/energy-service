@@ -37,4 +37,6 @@ spec:
               # I need access to 1/4 of the cores of the node. To see your # of threads use `docker info --format '{{.NCPU}}'`.
               cpu: "250m"
             limits:
+              # 250m means 0.250millicpu and 1 is the actual value that limits.cpu will get because of rounding.
+              # If the value is 1500m cpu then this is 1.5cpus and with rounding is 2cpus.
               cpu: "250m" # Execute instructions 25ms/100ms on my 1 core.

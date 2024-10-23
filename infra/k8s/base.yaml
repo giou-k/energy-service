@@ -33,6 +33,7 @@ spec:
             - name: energy-api
               containerPort: 6000
           env:
+#            This sets the value of GOMAXPROCS to whatever the value of limits.cpu is inside infra/k8s/patch-deploy.yaml, which is 1
             - name: GOMAXPROCS
               valueFrom:
                 resourceFieldRef:
