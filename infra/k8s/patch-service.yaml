@@ -11,3 +11,6 @@ spec:
     - name: energy-api
       port: 3000
       targetPort: energy-api
+    - name: energy-debug
+      port: 3011
+      targetPort: energy-debug

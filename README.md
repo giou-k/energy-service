@@ -9,7 +9,7 @@ Energy Service is a personal project to help me document my knowledge and sharpe
 
 Run `make all` to create the docker image.
 
-## Infra
+#### Infra
 
 In order to bring up the kubernetes environment you need `kind` installed.
 
@@ -23,3 +23,9 @@ After installing `kind`, do:
 
 3. Apply the k8 configuration:
 `make dev-apply`
+
+#### Run it and more
+
+* `make run` will start the server
+* You can check `http://localhost:3011/debug/statsviz/` for nice debug graphs and `http://localhost:3011/debug/pprof/` 
+for...not so nice debug stats

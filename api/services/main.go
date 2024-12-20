@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"expvar"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
@@ -10,11 +12,26 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
+
+	"github.com/energy-service/api/services/debug"
+	"github.com/energy-service/platform/logger"
 )
 
-//var build = "develop"
+var build = "develop"
 
 func main() {
+	log := initLogger()
+	// -------------------------------------------------------------------------
+
+	ctx := context.Background()
+
+	if err := run(ctx, log); err != nil {
+		log.Error(ctx, "startup", "err", err)
+		os.Exit(1)
+	}
+}
+
+func initLogger() *logger.Logger {
 	var log *logger.Logger
 
 	events := logger.Events{
@@ -29,33 +46,14 @@ func main() {
 
 	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "ENERGY", traceIDFn, events)
 
-	// -------------------------------------------------------------------------
-
-	ctx := context.Background()
-
-	if err := run(ctx, log); err != nil {
-		log.Error(ctx, "startup", "err", err)
-		return // Adding this return just to be on the safe side that the program end here, even if someone adds more code after that clause.
-	}
-	// ----------------------------------------
-	log.Println("starting service", build)
-	defer log.Println("service ended")
-
-	log.Println("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
-
-	shutdown := make(chan os.Signal, 1)
-	// Notify our shutdown channel for the following signals.
-	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
-	<-shutdown
-
-	log.Println("stopping service")
+	return log
 }
 
 func run(ctx context.Context, log *logger.Logger) error {
-	log.Println("starting service", build)
-	defer log.Println("service ended")
+	// -------------------------------------------------------------------------
+	// GOMAXPROCS
 
-	log.Println("startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
 
 	// -------------------------------------------------------------------------
 	// Configuration
@@ -68,7 +66,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 			IdleTimeout        time.Duration `conf:"default:120s"`
 			ShutdownTimeout    time.Duration `conf:"default:20s"`
 			APIHost            string        `conf:"default:0.0.0.0:3000"`
-			DebugHost          string        `conf:"default:0.0.0.0:3010"`
+			DebugHost          string        `conf:"default:0.0.0.0:3011"`
 			CORSAllowedOrigins []string      `conf:"default:*, mask"`
 		}
 	}{
@@ -92,10 +90,24 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	log.BuildInfo(ctx)
 
+	expvar.NewString("build").Set(cfg.Build)
+	// -------------------------------------------------------------------------
+	// Start Debug Service
+	go func() {
+		log.Info(ctx, "startup", "status", "debug v1 router started", "host", cfg.Web.DebugHost)
+
+		//  note that this goroutine is an orphan of the main go routine, but we don't need to end properly this debug goroutine,
+		// since it is just writing the state of the app, and when the app ends, it can end too.
+		if err := http.ListenAndServe(":3011", debug.Router()); err != nil {
+			//if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Router()); err != nil {
+			log.Info(ctx, "shutdown", "status", "debug v1 router closed", "host", "0.0.0.0:3011", "msg", err)
+		}
+	}()
+
 	shutdown := make(chan os.Signal, 1)
 	// Notify our shutdown channel for the following signals.
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
-	<-shutdown
+	sig := <-shutdown
 
 	log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
 	defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)

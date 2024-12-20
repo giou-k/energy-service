@@ -1,6 +1,6 @@
 # Build the Go Binary.
-FROM golang:1.21.3 as build_energy-api
-ENV CGO_ENABLED 0
+FROM golang:1.21.3 AS build_energy-api
+ENV CGO_ENABLED=0
 ARG BUILD_REF
 
 # Create the service directory and the copy the module files first and then
@@ -15,16 +15,22 @@ ARG BUILD_REF
 COPY . /energy-service
 
 # Build the service binary.
-WORKDIR /energy-service
+WORKDIR /energy-service/api/services
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
+
+#############################################################################
+
 # Run the Go Binary in Alpine.
-FROM alpine:3.18
+FROM alpine:3.20
 ARG BUILD_DATE
 ARG BUILD_REF
-COPY --from=build_energy-api --chown=giou:giou /energy-service/energy-service /energy-service/energy-service
+RUN addgroup -g 1000 -S service && \
+    adduser -u 1000 -h /energy-service -G service -S service
+COPY --from=build_energy-api /energy-service/api/services/services /energy-service/services
 WORKDIR /energy-service
-CMD ["./energy-service"]
+USER service
+CMD ["./services"]
 
 LABEL org.opencontainers.image.title="energy-api" \
       org.opencontainers.image.authors="Konstantinos Georgiou" \

@@ -8,4 +8,4 @@ patches:
 images:
   - name: service-image
     newName: giou/energy-service/energy-api
-    newTag: "0.1"
+    newTag: "0.2"

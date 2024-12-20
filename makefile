@@ -1,15 +1,16 @@
 SHELL = /bin/bash
 
 build:
-	go build -ldflags "-X main.build=local" # With this we define the value of build var inside main.go
+	go build -ldflags "-X main.build=local" ./api/services
+ 	# With `main.build=local`, we define the value of build var inside main.go.
 
 run:
-	go run main.go
+	go run api/services/main.go
 
 # ==============================================================================
 # Building containers
 
-VERSION := 0.1
+VERSION := 0.2
 BASE_IMAGE_NAME := giou/energy-service
 SERVICE_NAME    := energy-api
 SERVICE_IMAGE   := $(BASE_IMAGE_NAME)/$(SERVICE_NAME):$(VERSION)
@@ -55,7 +56,7 @@ dev-apply:
 
 dev-logs:
 	kubectl logs --namespace=$(NAMESPACE) -l app=$(APP) --all-containers=true -f --tail=100 # --max-log-requests=6, 5 is the default value, Specify maximum number of concurrent logs to follow when using by a selector.
-# currtly the above is not working cause of namespace resources: "No resources found in ns-energy-europe namespace."
+# currently the above is not working cause of namespace resources: "No resources found in ns-energy-europe namespace."
 
 # logs based on the selector of base.yaml: `k logs -l app=energy --all-containers=true -f --tail=100`
 

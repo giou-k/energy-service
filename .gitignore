@@ -2,9 +2,11 @@
 # IDE
 .idea
 
-# personal MDs
-todo.md
-
 # Exec
 energy-service
 main
+service
+
+# random
+todo.md
+test

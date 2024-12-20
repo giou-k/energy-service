@@ -6,6 +6,9 @@ nodes:
       # Energy-Api
       - containerPort: 6000
         hostPort: 6000
+      # Debug
+      - containerPort: 3011
+        hostPort: 3011
       # Postgres
       - containerPort: 5432
         hostPort: 5444
