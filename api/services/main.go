@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"expvar"
 	"fmt"
 	"net/http"
@@ -76,6 +77,16 @@ func run(ctx context.Context, log *logger.Logger) error {
 		},
 	}
 
+	const prefix = "ENERGY"
+	help, err := conf.Parse(prefix, &cfg)
+	if err != nil {
+		if errors.Is(err, conf.ErrHelpWanted) {
+			fmt.Println(help)
+			return nil
+		}
+		return fmt.Errorf("parsing config: %w", err)
+	}
+
 	// -------------------------------------------------------------------------
 	// App Starting
 
@@ -91,6 +102,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 	log.BuildInfo(ctx)
 
 	expvar.NewString("build").Set(cfg.Build)
+
 	// -------------------------------------------------------------------------
 	// Start Debug Service
 	go func() {
@@ -98,9 +110,9 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 		//  note that this goroutine is an orphan of the main go routine, but we don't need to end properly this debug goroutine,
 		// since it is just writing the state of the app, and when the app ends, it can end too.
-		if err := http.ListenAndServe(":3011", debug.Router()); err != nil {
+		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Router()); err != nil {
 			//if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Router()); err != nil {
-			log.Info(ctx, "shutdown", "status", "debug v1 router closed", "host", "0.0.0.0:3011", "msg", err)
+			log.Info(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "msg", err)
 		}
 	}()
 
