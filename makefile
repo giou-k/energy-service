@@ -62,3 +62,5 @@ dev-logs:
 
 dev-restart:
 	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
+
+dev-update: all dev-load dev-apply run

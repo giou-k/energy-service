@@ -110,19 +110,54 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 		//  note that this goroutine is an orphan of the main go routine, but we don't need to end properly this debug goroutine,
 		// since it is just writing the state of the app, and when the app ends, it can end too.
-		if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Router()); err != nil {
-			//if err := http.ListenAndServe(cfg.Web.DebugHost, debug.Router()); err != nil {
+		if err = http.ListenAndServe(cfg.Web.DebugHost, debug.Router()); err != nil {
 			log.Info(ctx, "shutdown", "status", "debug v1 router closed", "host", cfg.Web.DebugHost, "msg", err)
 		}
 	}()
 
+	// -------------------------------------------------------------------------
+	// Start API Service
+
+	log.Info(ctx, "startup", "status", "initializing V1 API support")
+
 	shutdown := make(chan os.Signal, 1)
 	// Notify our shutdown channel for the following signals.
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-shutdown
 
-	log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig)
-	defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig)
+	srv := http.Server{
+		Addr:         cfg.Web.APIHost,
+		Handler:      nil,
+		ReadTimeout:  cfg.Web.ReadTimeout,
+		WriteTimeout: cfg.Web.WriteTimeout,
+		IdleTimeout:  cfg.Web.IdleTimeout,
+		ErrorLog:     logger.NewStdLogger(log, logger.LevelError),
+	}
+
+	serverError := make(chan error, 1)
+	go func() {
+		log.Info(ctx, "startup", "status", "api router started", "host", srv.Addr)
+		serverError <- srv.ListenAndServe()
+	}()
+
+	// -------------------------------------------------------------------------
+	// Shutdown
+
+	select {
+	case srvErr := <-serverError:
+		return fmt.Errorf("server error: %w", srvErr)
+	case sig := <-shutdown:
+		log.Info(ctx, "shutdown", "status", "shutdown started", "signal", sig.String())
+		defer log.Info(ctx, "shutdown", "status", "shutdown complete", "signal", sig.String())
+
+		ctx, cancel := context.WithTimeout(ctx, cfg.Web.ShutdownTimeout)
+		defer cancel()
+
+		if err := srv.Shutdown(ctx); err != nil {
+			srv.Close()
+			return fmt.Errorf("could not stop server gracefully: %w", err)
+		}
+
+	}
 
 	return nil
 }
