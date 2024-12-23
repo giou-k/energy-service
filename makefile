@@ -64,3 +64,8 @@ dev-restart:
 	kubectl rollout restart deployment $(APP) --namespace=$(NAMESPACE)
 
 dev-update: all dev-load dev-apply run
+
+curl-test:
+	curl -il -X GET http://localhost:3011/debug/pprof
+	curl -il -X GET http://localhost:3000
+	curl -il -X GET http://localhost:3000/test
