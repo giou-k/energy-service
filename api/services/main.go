@@ -15,7 +15,7 @@ import (
 	"github.com/ardanlabs/conf/v3"
 
 	"github.com/energy-service/api/services/debug"
-	"github.com/energy-service/api/services/route"
+	"github.com/energy-service/api/services/server"
 	"github.com/energy-service/platform/logger"
 )
 
@@ -127,7 +127,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	srv := http.Server{
 		Addr:         cfg.Web.APIHost,
-		Handler:      route.WebAPI(),
+		Handler:      server.WebAPI(),
 		ReadTimeout:  cfg.Web.ReadTimeout,
 		WriteTimeout: cfg.Web.WriteTimeout,
 		IdleTimeout:  cfg.Web.IdleTimeout,
